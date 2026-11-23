@@ -1,0 +1,61 @@
+{{define "body"}}
+<div class="page-head">
+  <div>
+    <h1>Statistiques</h1>
+    <p class="lede">Mesures calculées depuis le journal des factures.</p>
+  </div>
+  <div class="page-actions"><a class="button" href="/">Retour au journal</a></div>
+</div>
+
+<section class="summary-band wide" aria-label="Indicateurs">
+  <div><span>Factures</span><strong>{{.Stats.Count}}</strong></div>
+  <div><span>Clients</span><strong>{{.Stats.ClientCount}}</strong></div>
+  <div><span>Total facturé</span><strong>{{money .Stats.TotalCents}}</strong></div>
+  <div><span>Encaissé</span><strong class="ink-green">{{money .Stats.PaidCents}}</strong></div>
+  <div><span>Reste dû</span><strong class="ink-rubric">{{money .Stats.UnpaidCents}}</strong></div>
+  <div><span>Dont échu</span><strong class="ink-rubric">{{money .Stats.OverdueCents}}</strong></div>
+</section>
+
+<div class="stat-grid">
+  <section class="panel">
+    <h2>Production mensuelle</h2>
+    <p class="fine-print">Montants facturés par mois d'émission · 12 derniers mois · moyenne {{money .Stats.AverageCents}} par facture.</p>
+    <table class="ledger bars">
+      <thead><tr><th>Mois</th><th>Montant</th><th>Volume</th></tr></thead>
+      <tbody>
+        {{range .Stats.Months}}
+        <tr><td>{{.Label}}</td><td class="num">{{money .AmountCents}}</td><td><div class="bar"><span style="width: {{.Pct}}%"></span></div></td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Clients les plus facturés</h2>
+    {{if .Stats.Clients}}
+    <table class="ledger bars">
+      <thead><tr><th>Client</th><th class="num">Factures</th><th class="num">Total</th></tr></thead>
+      <tbody>
+        {{range .Stats.Clients}}
+        <tr><td>{{.Name}}</td><td class="num">{{.Count}}</td><td class="num">{{money .TotalCents}}</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+    {{else}}<div class="empty"><strong>Aucune donnée.</strong><p>Les clients apparaîtront ici après une première facture.</p></div>{{end}}
+  </section>
+
+  <section class="panel">
+    <h2>Ancienneté des impayés</h2>
+    <table class="ledger">
+      <thead><tr><th>Échéance</th><th class="num">Factures</th><th class="num">Montant</th></tr></thead>
+      <tbody>
+        {{range .Stats.Aging}}
+        <tr><td>{{.Label}}</td><td class="num">{{.Count}}</td><td class="num">{{money .TotalCents}}</td></tr>
+        {{end}}
+      </tbody>
+      <tfoot><tr><th>Total impayé</th><th class="num">{{.Stats.UnpaidCount}}</th><th class="num">{{money .Stats.UnpaidCents}}</th></tr></tfoot>
+    </table>
+    <p class="fine-print">{{.Stats.OverdueCount}} facture(s) déjà échue(s) au {{today}}.</p>
+  </section>
+</div>
+{{end}}

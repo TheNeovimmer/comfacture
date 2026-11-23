@@ -1,0 +1,12 @@
+# Données SQLite locales (ne jamais publier les factures)
+invoices.db
+invoices.db-shm
+invoices.db-wal
+
+# Binaire compilé
+invoice-manager
+
+# Artefacts de revue visuelle
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/

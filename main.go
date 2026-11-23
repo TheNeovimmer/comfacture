@@ -28,6 +28,7 @@ func loadTemplates() (map[string]*template.Template, error) {
 	funcs := template.FuncMap{
 		"money": func(c int64) string { return currency + " " + formatCents(c) },
 		"mul":   func(cents int64, qty int) int64 { return cents * int64(qty) },
+		"today": today,
 	}
 	out := map[string]*template.Template{}
 	entries, err := fs.ReadDir(templateFS, "templates")
@@ -62,6 +63,8 @@ func (s *server) render(w http.ResponseWriter, name string, data map[string]any)
 			data["Section"] = "clients"
 		case "import":
 			data["Section"] = "import"
+		case "stats":
+			data["Section"] = "stats"
 		default:
 			data["Section"] = "factures"
 		}
@@ -86,6 +89,7 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /invoices/export.xlsx", s.exportXLSX)
 	mux.HandleFunc("POST /invoices/{id}/pay", s.payInvoice)
 	mux.HandleFunc("POST /invoices/{id}/delete", s.deleteInvoice)
+	mux.HandleFunc("GET /stats", s.stats)
 	mux.HandleFunc("GET /clients", s.clients)
 	mux.HandleFunc("POST /clients", s.createClient)
 	mux.HandleFunc("GET /import", s.importPage)
