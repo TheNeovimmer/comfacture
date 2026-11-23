@@ -203,10 +203,10 @@ table.items input { margin: 0; }
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; align-items: start; }
 .stat-grid .panel:first-child { grid-column: 1 / -1; }
 .stat-grid .panel .fine-print { margin: 0 0 16px; }
-table.bars td:last-child { width: 42%; }
-.bar { height: 8px; background: #e7e2d6; border: 1px solid var(--rule); }
-.bar span { display: block; height: 100%; background: var(--ink); }
-table.bars tbody tr:nth-child(even) .bar span { background: var(--rubric); }
+.chart-box { position: relative; height: 240px; margin-bottom: 20px; }
+.chart-box--small { height: 200px; }
+table.ledger.compact th, table.ledger.compact td { padding: 8px 10px; font-size: 13px; }
+table.ledger.compact thead th { position: static; }
 
 /* Assistant margin */
 .assistant { background: #eae5d9; border-left: 1px solid var(--rule-strong); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }

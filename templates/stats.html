@@ -20,42 +20,115 @@
   <section class="panel">
     <h2>Production mensuelle</h2>
     <p class="fine-print">Montants facturés par mois d'émission · 12 derniers mois · moyenne {{money .Stats.AverageCents}} par facture.</p>
-    <table class="ledger bars">
-      <thead><tr><th>Mois</th><th>Montant</th><th>Volume</th></tr></thead>
-      <tbody>
-        {{range .Stats.Months}}
-        <tr><td>{{.Label}}</td><td class="num">{{money .AmountCents}}</td><td><div class="bar"><span style="width: {{.Pct}}%"></span></div></td></tr>
-        {{end}}
-      </tbody>
+    <div class="chart-box"><canvas id="monthChart" aria-label="Graphique de la production mensuelle" role="img"></canvas></div>
+    <table class="ledger compact">
+      <thead><tr><th>Mois</th><th class="num">Montant</th></tr></thead>
+      <tbody>{{range .Stats.Months}}<tr><td>{{.Label}}</td><td class="num">{{money .AmountCents}}</td></tr>{{end}}</tbody>
     </table>
   </section>
 
   <section class="panel">
     <h2>Clients les plus facturés</h2>
     {{if .Stats.Clients}}
-    <table class="ledger bars">
+    <div class="chart-box"><canvas id="clientChart" aria-label="Graphique des clients les plus facturés" role="img"></canvas></div>
+    <table class="ledger compact">
       <thead><tr><th>Client</th><th class="num">Factures</th><th class="num">Total</th></tr></thead>
-      <tbody>
-        {{range .Stats.Clients}}
-        <tr><td>{{.Name}}</td><td class="num">{{.Count}}</td><td class="num">{{money .TotalCents}}</td></tr>
-        {{end}}
-      </tbody>
+      <tbody>{{range .Stats.Clients}}<tr><td>{{.Name}}</td><td class="num">{{.Count}}</td><td class="num">{{money .TotalCents}}</td></tr>{{end}}</tbody>
     </table>
     {{else}}<div class="empty"><strong>Aucune donnée.</strong><p>Les clients apparaîtront ici après une première facture.</p></div>{{end}}
   </section>
 
   <section class="panel">
     <h2>Ancienneté des impayés</h2>
-    <table class="ledger">
+    <div class="chart-box"><canvas id="agingChart" aria-label="Graphique de l'ancienneté des impayés" role="img"></canvas></div>
+    <table class="ledger compact">
       <thead><tr><th>Échéance</th><th class="num">Factures</th><th class="num">Montant</th></tr></thead>
-      <tbody>
-        {{range .Stats.Aging}}
-        <tr><td>{{.Label}}</td><td class="num">{{.Count}}</td><td class="num">{{money .TotalCents}}</td></tr>
-        {{end}}
-      </tbody>
+      <tbody>{{range .Stats.Aging}}<tr><td>{{.Label}}</td><td class="num">{{.Count}}</td><td class="num">{{money .TotalCents}}</td></tr>{{end}}</tbody>
       <tfoot><tr><th>Total impayé</th><th class="num">{{.Stats.UnpaidCount}}</th><th class="num">{{money .Stats.UnpaidCents}}</th></tr></tfoot>
     </table>
     <p class="fine-print">{{.Stats.OverdueCount}} facture(s) déjà échue(s) au {{today}}.</p>
   </section>
+
+  <section class="panel">
+    <h2>État du règlement</h2>
+    <div class="chart-box chart-box--small"><canvas id="statusChart" aria-label="Répartition des factures payées et impayées" role="img"></canvas></div>
+    <p class="fine-print">{{.Stats.PaidCount}} facture(s) payée(s), {{.Stats.UnpaidCount}} en attente de règlement.</p>
+  </section>
 </div>
+
+<script src="/static/vendor/chart.umd.min.js"></script>
+<script type="application/json" id="chart-data">{{toJSON .ChartData}}</script>
+<script>
+  (function () {
+    const node = document.getElementById('chart-data');
+    if (!node || typeof Chart === 'undefined') return;
+    const d = JSON.parse(node.textContent);
+    const ink = '#17283a', rubric = '#a72720', green = '#1e6b45';
+    const rule = '#d6d0c1', soft = '#53616e', paper = '#fffdf7';
+
+    Chart.defaults.font.family = '"Segoe UI", Roboto, sans-serif';
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = soft;
+
+    const moneyAxis = {
+      beginAtZero: true,
+      grid: { color: rule },
+      border: { display: false },
+      ticks: { callback: function (v) { return v + ' €'; } }
+    };
+    const base = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }
+    };
+
+    new Chart(document.getElementById('monthChart'), {
+      type: 'bar',
+      data: { labels: d.monthLabels, datasets: [{ data: d.monthValues, backgroundColor: ink, barPercentage: 0.7 }] },
+      options: Object.assign({}, base, {
+        scales: {
+          x: { grid: { display: false }, border: { color: rule } },
+          y: moneyAxis
+        }
+      })
+    });
+
+    new Chart(document.getElementById('clientChart'), {
+      type: 'bar',
+      data: { labels: d.clientLabels, datasets: [{ data: d.clientValues, backgroundColor: rubric, barPercentage: 0.7 }] },
+      options: Object.assign({}, base, {
+        indexAxis: 'y',
+        scales: {
+          x: moneyAxis,
+          y: { grid: { display: false }, border: { display: false } }
+        }
+      })
+    });
+
+    new Chart(document.getElementById('agingChart'), {
+      type: 'bar',
+      data: { labels: d.agingLabels, datasets: [{ data: d.agingValues, backgroundColor: ink, barPercentage: 0.7 }] },
+      options: Object.assign({}, base, {
+        scales: {
+          x: { grid: { display: false }, border: { color: rule } },
+          y: moneyAxis
+        }
+      })
+    });
+
+    new Chart(document.getElementById('statusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Payées', 'Impayées'],
+        datasets: [{ data: [d.paidCount, d.unpaidCount], backgroundColor: [green, rubric], borderColor: paper, borderWidth: 2 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: soft, usePointStyle: true } } }
+      }
+    });
+  })();
+</script>
 {{end}}

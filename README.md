@@ -83,7 +83,7 @@ La page envoie la question à `POST /api/chat`. Le serveur construit un instanta
 
 ## Statistiques et modèle de données
 
-La page **Statistiques** lit une vue SQL unique, `invoice_facts`, qui contient une ligne par facture avec son client, ses dates, son statut et son total calculé. C'est la couche de mesure commune : tous les indicateurs en sont dérivés.
+La page **Statistiques** lit une vue SQL unique, `invoice_facts`, qui contient une ligne par facture avec son client, ses dates, son statut et son total calculé. C'est la couche de mesure commune : tous les indicateurs en sont dérivés. Les graphiques (production mensuelle, top clients, ancienneté des impayés, état du règlement) sont dessinés avec Chart.js, embarqué localement dans `static/vendor` : aucune connexion à un CDN n'est nécessaire et les tableaux de données restent présents sous les graphiques.
 
 | Objet | Contenu |
 |---|---|
@@ -120,6 +120,7 @@ chat.go            instantané des factures et endpoint de chat
 stats.go           indicateurs et agrégations
 templates/         interfaces HTML
 static/style.css   système visuel
+static/vendor/     Chart.js (graphiques hors ligne)
 PRODUCT.md         contexte produit
 ```
 

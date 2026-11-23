@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"embed"
+	"encoding/json"
 	"html/template"
 	"io/fs"
 	"log"
@@ -29,6 +30,10 @@ func loadTemplates() (map[string]*template.Template, error) {
 		"money": func(c int64) string { return currency + " " + formatCents(c) },
 		"mul":   func(cents int64, qty int) int64 { return cents * int64(qty) },
 		"today": today,
+		"toJSON": func(v any) template.JS {
+			b, _ := json.Marshal(v)
+			return template.JS(b)
+		},
 	}
 	out := map[string]*template.Template{}
 	entries, err := fs.ReadDir(templateFS, "templates")

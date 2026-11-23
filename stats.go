@@ -24,6 +24,17 @@ type agingPoint struct {
 	TotalCents int64
 }
 
+type chartData struct {
+	MonthLabels  []string  `json:"monthLabels"`
+	MonthValues  []float64 `json:"monthValues"`
+	ClientLabels []string  `json:"clientLabels"`
+	ClientValues []float64 `json:"clientValues"`
+	AgingLabels  []string  `json:"agingLabels"`
+	AgingValues  []float64 `json:"agingValues"`
+	PaidCount    int       `json:"paidCount"`
+	UnpaidCount  int       `json:"unpaidCount"`
+}
+
 type statsData struct {
 	Count, ClientCount, PaidCount, UnpaidCount, OverdueCount int
 	TotalCents, PaidCents, UnpaidCents, OverdueCents         int64
@@ -162,5 +173,21 @@ FROM invoice_facts GROUP BY client_id ORDER BY SUM(total_cents) DESC LIMIT 5`)
 	}
 	rows.Close()
 
-	s.render(w, "stats", map[string]any{"Title": "Statistiques", "Stats": d})
+	charts := chartData{PaidCount: d.PaidCount, UnpaidCount: d.UnpaidCount}
+	for _, m := range d.Months {
+		charts.MonthLabels = append(charts.MonthLabels, m.Label)
+		charts.MonthValues = append(charts.MonthValues, float64(m.AmountCents)/100)
+	}
+	for _, c := range d.Clients {
+		charts.ClientLabels = append(charts.ClientLabels, c.Name)
+		charts.ClientValues = append(charts.ClientValues, float64(c.TotalCents)/100)
+	}
+	for _, a := range d.Aging {
+		charts.AgingLabels = append(charts.AgingLabels, a.Label)
+		charts.AgingValues = append(charts.AgingValues, float64(a.TotalCents)/100)
+	}
+
+	s.render(w, "stats", map[string]any{
+		"Title": "Statistiques", "Stats": d, "ChartData": charts,
+	})
 }
