@@ -39,7 +39,16 @@ Les templates HTML et la feuille de style sont embarqués dans le binaire : aucu
 
 ## Configuration
 
-La configuration se fait par variables d'environnement. Aucune clé n'est écrite dans le code source.
+La configuration se fait par variables d'environnement. Aucune clé n'est écrite dans le code source. Un modèle est fourni dans `.env.example` :
+
+```bash
+cp .env.example .env
+# éditez .env pour remplacer sk-or-v1-votre-cle-ici par votre clé
+set -a && source .env && set +a
+go run .
+```
+
+Le fichier `.env` est ignoré par Git et ne doit jamais être versionné. L'application ne lit pas `.env` automatiquement : la commande `source` ci-dessus charge les variables dans le shell avant le lancement.
 
 | Variable | Défaut | Rôle |
 |---|---|---|

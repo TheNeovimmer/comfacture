@@ -1,3 +1,6 @@
+# Secrets locaux
+.env
+
 # Données SQLite locales (ne jamais publier les factures)
 invoices.db
 invoices.db-shm
