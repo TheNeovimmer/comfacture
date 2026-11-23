@@ -1,0 +1,47 @@
+{{define "body"}}
+<div class="page-head">
+  <div>
+    <h1>Journal des factures</h1>
+    <p class="lede">Écritures, échéances et solde en un coup d'œil.</p>
+  </div>
+  <div class="page-actions">
+    <a class="button" href="/invoices/export.xlsx">Exporter XLSX</a>
+    <a class="primary" href="/invoices/new">Nouvelle facture</a>
+  </div>
+</div>
+
+<section class="summary-band" aria-label="Résumé du journal">
+  <div><span>Écritures</span><strong>{{len .Invoices}}</strong></div>
+  <div><span>Total facturé</span><strong>{{money .TotalCents}}</strong></div>
+  <div><span>Encaissé</span><strong class="ink-green">{{money .PaidCents}}</strong></div>
+  <div><span>Reste dû</span><strong class="ink-rubric">{{money .UnpaidCents}}</strong></div>
+</section>
+
+{{if .Invoices}}
+<div class="table-wrap">
+  <table class="ledger">
+    <thead>
+      <tr><th>Numéro</th><th>Client</th><th>Émission</th><th>Échéance</th><th>Statut</th><th class="num balance">Solde</th></tr>
+    </thead>
+    <tbody>
+      {{range .Invoices}}
+      <tr>
+        <td class="entry"><a href="/invoices/{{.ID}}">{{.Number}}</a></td>
+        <td>{{.ClientName}}</td>
+        <td>{{.IssueDate}}</td>
+        <td>{{.DueDate}}</td>
+        <td><span class="stamp {{.Status}}">{{if eq .Status "paid"}}Payée{{else}}Due{{end}}</span></td>
+        <td class="num balance">{{money .TotalCents}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+    <tfoot><tr><th colspan="5">Total du journal</th><th class="num balance">{{money .TotalCents}}</th></tr></tfoot>
+  </table>
+</div>
+{{else}}
+<div class="empty">
+  <strong>Le journal est vierge.</strong>
+  <p><a href="/invoices/new">Ouvrir une première écriture</a> ou <a href="/import">importer un fichier XLSX</a>.</p>
+</div>
+{{end}}
+{{end}}

@@ -1,0 +1,46 @@
+{{define "body"}}
+<div class="page-head">
+  <div>
+    <h1 class="entry-title">{{.Invoice.Number}}</h1>
+    <p class="lede">Écriture du {{.Invoice.IssueDate}} · {{.Invoice.ClientName}}</p>
+  </div>
+  <div class="page-actions">
+    <a class="button" href="/">Retour au journal</a>
+    {{if ne .Invoice.Status "paid"}}
+    <form method="post" action="/invoices/{{.Invoice.ID}}/pay"><button class="primary" type="submit">Encaisser</button></form>
+    {{end}}
+  </div>
+</div>
+
+<dl class="meta-grid">
+  <div><dt>Client</dt><dd>{{.Invoice.ClientName}}</dd></div>
+  <div><dt>Émission</dt><dd>{{.Invoice.IssueDate}}</dd></div>
+  <div><dt>Échéance</dt><dd>{{.Invoice.DueDate}}</dd></div>
+  <div><dt>Statut</dt><dd><span class="stamp {{.Invoice.Status}}">{{if eq .Invoice.Status "paid"}}Payée{{else}}Due{{end}}</span></dd></div>
+</dl>
+
+<div class="table-wrap">
+  <table class="ledger detail">
+    <thead><tr><th>Description</th><th class="num">Qté</th><th class="num">Prix unitaire</th><th class="num balance">Montant</th></tr></thead>
+    <tbody>
+      {{range .Invoice.Items}}
+      <tr>
+        <td>{{.Description}}</td>
+        <td class="num">{{.Quantity}}</td>
+        <td class="num">{{money .UnitPriceCents}}</td>
+        <td class="num balance">{{money (mul .UnitPriceCents .Quantity)}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+    <tfoot><tr><th colspan="3">Solde de l'écriture</th><th class="num balance">{{money .Invoice.TotalCents}}</th></tr></tfoot>
+  </table>
+</div>
+
+{{if .Invoice.Notes}}<p class="notes"><strong>Notes</strong> {{.Invoice.Notes}}</p>{{end}}
+
+<div class="page-actions bottom">
+  <form method="post" action="/invoices/{{.Invoice.ID}}/delete" onsubmit="return confirm('Supprimer cette écriture ?')">
+    <button class="danger" type="submit">Radier l'écriture</button>
+  </form>
+</div>
+{{end}}

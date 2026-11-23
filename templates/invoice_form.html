@@ -1,0 +1,56 @@
+{{define "body"}}
+<div class="page-head">
+  <div>
+    <h1>Nouvelle écriture</h1>
+    <p class="lede">Saisissez une facture et ses lignes dans le journal.</p>
+  </div>
+  <div class="page-actions"><a class="button" href="/">Retour au journal</a></div>
+</div>
+
+{{if .Error}}<p class="notice error">{{.Error}}</p>{{end}}
+
+{{if not .Clients}}
+<div class="empty"><strong>Aucun client enregistré.</strong><p><a href="/clients">Ajouter un client</a> avant de créer une facture.</p></div>
+{{else}}
+<form method="post" action="/invoices" class="ruled-form">
+  <div class="field-grid">
+    <label>Client
+      <select name="client_id" required>{{range .Clients}}<option value="{{.ID}}">{{.Name}}</option>{{end}}</select>
+    </label>
+    <label>Émission <input type="date" name="issue_date" value="{{.Today}}" required></label>
+    <label>Échéance <input type="date" name="due_date"></label>
+  </div>
+
+  <div class="section-head"><h2>Lignes de l'écriture</h2><button type="button" id="add-row" class="link-btn">+ Ajouter une ligne</button></div>
+  <div class="table-wrap">
+    <table class="ledger items">
+      <thead><tr><th>Description</th><th class="num">Qté</th><th class="num">Prix unitaire</th><th></th></tr></thead>
+      <tbody>
+        <tr class="item-row">
+          <td><input name="desc" required placeholder="Description"></td>
+          <td><input name="qty" type="number" min="1" value="1" required></td>
+          <td><input name="price" type="number" step="0.01" min="0" value="0" required></td>
+          <td><button type="button" class="icon-btn" title="Supprimer la ligne" aria-label="Supprimer la ligne" onclick="this.closest('tr').remove()">×</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <label>Notes <textarea name="notes" rows="3" placeholder="Référence, commentaire interne…"></textarea></label>
+
+  <div class="form-actions">
+    <button class="primary" type="submit">Inscrire au journal</button>
+    <a class="button" href="/">Annuler</a>
+  </div>
+</form>
+<script>
+  document.getElementById('add-row').addEventListener('click', function () {
+    const row = document.querySelector('.item-row').cloneNode(true);
+    row.querySelectorAll('input').forEach(function (input) {
+      input.value = input.name === 'qty' ? '1' : (input.name === 'price' ? '0' : '');
+    });
+    document.querySelector('.items tbody').appendChild(row);
+  });
+</script>
+{{end}}
+{{end}}

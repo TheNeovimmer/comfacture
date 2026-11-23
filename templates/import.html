@@ -1,0 +1,20 @@
+{{define "body"}}
+<div class="page-head">
+  <div>
+    <h1>Importer un fichier Excel</h1>
+    <p class="lede">Le modèle lit le tableur et l'inscrit dans le journal.</p>
+  </div>
+  <div class="page-actions"><a class="button" href="/">Retour au journal</a></div>
+</div>
+
+{{if .Error}}<p class="notice error">{{.Error}}</p>{{end}}
+{{if .Result}}<p class="notice ok">{{.Result}} <a href="/">Voir le journal</a></p>{{end}}
+
+<section class="panel narrow">
+  <form method="post" action="/import" enctype="multipart/form-data" class="ruled-form">
+    <label>Fichier .xlsx <input type="file" name="file" accept=".xlsx" required></label>
+    <div class="form-actions"><button class="primary" type="submit">Importer</button></div>
+  </form>
+  <p class="fine-print">Le contenu du fichier est envoyé à OpenRouter pour être converti. Seul le premier onglet est lu.</p>
+</section>
+{{end}}

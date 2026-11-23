@@ -1,0 +1,38 @@
+{{define "body"}}
+<div class="page-head">
+  <div>
+    <h1>Clients</h1>
+    <p class="lede">Les noms qui apparaissent dans le journal.</p>
+  </div>
+</div>
+
+<div class="split">
+  <section class="panel">
+    <h2>Nouveau client</h2>
+    {{if .Error}}<p class="notice error">{{.Error}}</p>{{end}}
+    <form method="post" action="/clients" class="ruled-form">
+      <label>Nom <input name="name" required placeholder="Raison sociale"></label>
+      <label>Email <input type="email" name="email" placeholder="exemple@domaine.com"></label>
+      <label>Adresse <textarea name="address" rows="3"></textarea></label>
+      <div class="form-actions"><button class="primary" type="submit">Inscrire</button></div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Répertoire</h2>
+    {{if .Clients}}
+    <ul class="client-list">
+      {{range .Clients}}
+      <li>
+        <strong>{{.Name}}</strong>
+        {{if .Email}}<span>{{.Email}}</span>{{end}}
+        {{if .Address}}<small>{{.Address}}</small>{{end}}
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <div class="empty"><strong>Aucun client.</strong><p>Ajoutez-en un pour ouvrir une écriture.</p></div>
+    {{end}}
+  </section>
+</div>
+{{end}}

@@ -1,0 +1,115 @@
+{{define "layout"}}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} · Journal des factures</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-invoice" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM15 3v4h4M9 11h7M9 15h7"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M17 6a3 3 0 0 1 0 6M17 15c2.5.4 4 2 4 5"/></symbol>
+    <symbol id="i-import" viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4zM8 10h8M8 13h5"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-6 16-3-7z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  </svg>
+
+  <a class="skip" href="#main">Aller au contenu</a>
+
+  <div class="shell" id="shell">
+    <aside class="rail">
+      <a class="brand" href="/">
+        <span class="brand-mark">F</span>
+        <span class="brand-text">Factures<small>Journal de bord</small></span>
+      </a>
+      <nav aria-label="Navigation principale">
+        <a class="{{if eq .Section "factures"}}active{{end}}" href="/"><svg><use href="#i-invoice"/></svg>Factures</a>
+        <a class="{{if eq .Section "clients"}}active{{end}}" href="/clients"><svg><use href="#i-users"/></svg>Clients</a>
+        <a class="{{if eq .Section "import"}}active{{end}}" href="/import"><svg><use href="#i-import"/></svg>Importer XLSX</a>
+        <a href="/" id="rail-assistant"><svg><use href="#i-chat"/></svg>Assistant</a>
+      </nav>
+      <p class="rail-foot">Une seule entreprise<br>Données en local</p>
+    </aside>
+
+    <div class="workspace">
+      <main id="main" tabindex="-1">{{template "body" .}}</main>
+    </div>
+
+    <aside class="assistant" aria-label="Assistant de facturation">
+      <div class="assistant-head">
+        <span class="assistant-title"><span class="assistant-mark">?</span><strong>Assistant</strong></span>
+        <button type="button" class="icon-btn" id="assistant-close" title="Fermer l'assistant" aria-label="Fermer l'assistant"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="assistant-body" id="messages" aria-live="polite">
+        <div class="msg bot">Posez une question sur vos factures : échéances, impayés, montants. Je lis le journal, je ne le modifie pas.</div>
+      </div>
+      <div class="suggestions" id="suggestions" aria-label="Questions suggérées">
+        <button type="button" data-q="Que reste-t-il impayé ?">Impayés</button>
+        <button type="button" data-q="Quelles échéances en décembre ?">Échéances</button>
+        <button type="button" data-q="Quel est le total encaissé ?">Encaissé</button>
+      </div>
+      <form class="assistant-form" id="chat-form">
+        <label class="sr-only" for="chat-input">Votre question</label>
+        <input id="chat-input" type="text" maxlength="1000" autocomplete="off" placeholder="Que reste-t-il impayé ?" required>
+        <button class="primary" type="submit" title="Envoyer" aria-label="Envoyer"><svg><use href="#i-send"/></svg></button>
+      </form>
+      <p class="assistant-note">Lecture seule · réponses via OpenRouter</p>
+    </aside>
+  </div>
+
+  <button class="assistant-fab" type="button" id="assistant-open" title="Ouvrir l'assistant" aria-label="Ouvrir l'assistant"><svg><use href="#i-chat"/></svg></button>
+
+  <script>
+    (function () {
+      const shell = document.getElementById('shell');
+      const open = () => shell.classList.add('assistant-on');
+      const close = () => shell.classList.remove('assistant-on');
+      document.getElementById('assistant-open').addEventListener('click', open);
+      document.getElementById('assistant-close').addEventListener('click', close);
+      document.getElementById('rail-assistant').addEventListener('click', function (e) { e.preventDefault(); open(); });
+      if (window.innerWidth >= 1180) shell.classList.add('assistant-on');
+
+      const form = document.getElementById('chat-form');
+      const input = document.getElementById('chat-input');
+      const messages = document.getElementById('messages');
+      function addMessage(role, text, animate) {
+        const el = document.createElement('div');
+        el.className = 'msg ' + role + (animate ? ' fresh' : '');
+        el.textContent = text;
+        messages.appendChild(el);
+        messages.scrollTop = messages.scrollHeight;
+        return el;
+      }
+      async function send(text) {
+        text = (text || '').trim();
+        if (!text) return;
+        addMessage('user', text, true);
+        input.value = '';
+        const pending = addMessage('bot', '…', false);
+        pending.classList.add('pending');
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+          });
+          const data = await res.json();
+          pending.textContent = data.reply || data.error || 'Réponse indisponible.';
+        } catch (err) {
+          pending.textContent = 'Assistant indisponible pour le moment.';
+        }
+        pending.classList.remove('pending');
+        pending.classList.add('fresh');
+        messages.scrollTop = messages.scrollHeight;
+      }
+      form.addEventListener('submit', function (e) { e.preventDefault(); send(input.value); });
+      document.querySelectorAll('#suggestions button').forEach(function (btn) {
+        btn.addEventListener('click', function () { send(btn.dataset.q); });
+      });
+    })();
+  </script>
+</body>
+</html>
+{{end}}
